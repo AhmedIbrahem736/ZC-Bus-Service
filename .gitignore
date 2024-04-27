@@ -1,0 +1,19 @@
+# Django
+*.pyc
+*.pyo
+__pycache__
+*.sqlite3
+
+# Django static/media files
+staticfiles/
+media/
+
+# Virtual environment
+venv/
+.env
+
+# PyCharm files
+.idea/
+
+# VSCode files
+.vscode/
