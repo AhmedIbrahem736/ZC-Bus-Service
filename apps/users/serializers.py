@@ -1,7 +1,7 @@
 from django.contrib.auth import password_validation
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from apps.users.models import User
+from apps.users.models import User, PasswordStatus
 
 
 class ReadUserSerializer(serializers.ModelSerializer):
@@ -62,3 +62,61 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         data['user'] = ReadUserSerializer(instance=self.user).data
 
         return data
+
+
+class ForgetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class UpdatePasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(max_length=128, validators=[password_validation.validate_password])
+    confirm_password = serializers.CharField(max_length=128)
+
+    def validate(self, attrs):
+        user = self.context['user']
+        password = attrs['password']
+        confirm_password = attrs['confirm_password']
+
+        # check that password is changeable
+        if user.password_status != PasswordStatus.CHANGEABLE:
+            raise serializers.ValidationError("No OTP is verified")
+
+        if password != confirm_password:
+            raise serializers.ValidationError("password and confirm password must be the same")
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        password = validated_data['password']
+        instance.set_password(password)
+        instance.password_status = PasswordStatus.UNCHANGEABLE
+        instance.save()
+
+        return instance
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(max_length=128)
+    new_password = serializers.CharField(max_length=128, validators=[password_validation.validate_password])
+    confirm_password = serializers.CharField(max_length=128)
+
+    def validate(self, attrs):
+        user = self.context['user']
+        old_password = attrs['old_password']
+        new_password = attrs['new_password']
+        confirm_password = attrs['confirm_password']
+
+        if not user.check_password(old_password):
+            raise serializers.ValidationError("old password is incorrect")
+
+        if new_password != confirm_password:
+            raise serializers.ValidationError("new password and confirm password must be the same")
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        new_password = validated_data['new_password']
+        instance.set_password(new_password)
+        instance.save()
+        return instance
