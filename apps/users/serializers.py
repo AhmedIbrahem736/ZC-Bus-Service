@@ -1,4 +1,6 @@
 from django.contrib.auth import password_validation
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from apps.users.models import User, PasswordStatus
@@ -64,8 +66,35 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 
-class ForgetPasswordSerializer(serializers.Serializer):
+class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField()
+
+
+class VerifyOtpSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(min_length=4, max_length=4)
+
+    def validate_otp(self, value):
+        user = self.context['user']
+
+        if user.password_status != PasswordStatus.OTP_REQUIRED:
+            raise serializers.ValidationError("No OTP was requested")
+
+        if user.otp_sent_at < timezone.now() - timedelta(minutes=5):
+            raise serializers.ValidationError("OTP has expired")
+
+        if user.otp != value:
+            raise serializers.ValidationError("OTP is incorrect")
+
+        return value
+
+    def update(self, instance, validated_data):
+        instance.otp = None
+        instance.otp_sent_at = None
+        instance.password_status = PasswordStatus.CHANGEABLE
+        instance.save()
+
+        return instance
 
 
 class UpdatePasswordSerializer(serializers.Serializer):
