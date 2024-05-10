@@ -3,7 +3,6 @@ from apps.users.models import User
 from apps.base.models import CustomBaseModel
 
 class BusRoute(CustomBaseModel):
-    id = models.AutoField(primary_key=True)
     destination = models.CharField(max_length=100, unique=True, blank=False)
     code = models.CharField(max_length=50, unique=True)
     driver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bus_routes', unique=True)
