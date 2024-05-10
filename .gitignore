@@ -17,3 +17,6 @@ venv/
 
 # VSCode files
 .vscode/
+
+# unit testing
+/unit_testing
