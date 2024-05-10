@@ -24,3 +24,14 @@ class BusStop(CustomBaseModel):
 
     def __str__(self):
         return self.name
+    
+
+
+class BusChat(CustomBaseModel):
+    # Send datetime is to be handled by 'created at' in CustomModel 
+    message = models.TextField(blank=False)
+    bus_route = models.ForeignKey(BusRoute, on_delete=models.PROTECT, blank=False)
+    sender = models.ForeignKey(User, on_delete=models.PROTECT, blank=False)
+
+    def __str__(self):
+        return self.message

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import BusRoute, BusStop
+from .models import BusRoute, BusStop, BusChat
 import re
 
 class BusStopSerializer(serializers.ModelSerializer):
@@ -48,3 +48,15 @@ class BusRouteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Plate number must contain only Arabic characters, numbers, or spaces.")
         return value
 
+
+
+
+class BusChatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BusChat
+        fields = ['id', 'message', 'bus_route', 'sender']
+        
+    def validate_message(self, value):
+        if not value:
+            raise serializers.ValidationError("Message cannot be empty.")
+        return value
