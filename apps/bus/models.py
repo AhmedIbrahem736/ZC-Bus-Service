@@ -20,7 +20,7 @@ class BusStop(CustomBaseModel):
     map_location = models.CharField(max_length=255)
     departure_time = models.TimeField(_("Departure Time"))
     arrival_time = models.TimeField(_("Arrival Time"))
-    bus_route = models.ForeignKey(BusRoute, on_delete=models.CASCADE, related_name='bus_stops')
+    bus_route = models.ForeignKey(BusRoute, on_delete=models.PROTECT, related_name='bus_stops')
 
     def __str__(self):
         return self.name
