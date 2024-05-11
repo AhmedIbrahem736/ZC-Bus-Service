@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from .models import BusRoute, BusStop
+from .models import BusRoute, BusStop, BusChat
 import re
+from apps.users.models import User
+from django.contrib.auth.models import Group
 
 class BusStopSerializer(serializers.ModelSerializer):
     class Meta:
@@ -48,3 +50,27 @@ class BusRouteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Plate number must contain only Arabic characters, numbers, or spaces.")
         return value
 
+
+
+
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ['name']
+
+class UserSerializer(serializers.ModelSerializer):
+    groups_info = GroupSerializer(source='groups', many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'groups_info']
+class BusChatSerializer(serializers.ModelSerializer):
+    sender_info = UserSerializer(source='sender', read_only=True)
+    class Meta:
+        model = BusChat
+        fields = ['id','created_at', 'message', 'bus_route', 'sender_info']
+        
+    def validate_message(self, value):
+        if not value:
+            raise serializers.ValidationError("Message cannot be empty.")
+        return value

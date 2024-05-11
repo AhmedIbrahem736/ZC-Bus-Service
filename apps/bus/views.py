@@ -1,7 +1,8 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
-from .models import BusRoute, BusStop
-from .serializers import BusRouteSerializer, BusStopSerializer
+from .models import BusRoute, BusStop, BusChat
+from .serializers import BusRouteSerializer, BusStopSerializer, BusChatSerializer
+from django.shortcuts import get_object_or_404
 
 class BusRouteListCreateAPIView(generics.ListCreateAPIView):
     queryset = BusRoute.objects.all()
@@ -78,3 +79,29 @@ class BusStopDeleteAPIView(generics.DestroyAPIView):
         if not request.user.has_perm('bus.delete_busstop'):
             raise PermissionDenied("You do not have permission to delete this bus route.")
         return super().delete(request, *args, **kwargs)
+    
+
+
+
+################################################################
+################################ Bus Chat #####################
+class BusChatListCreateAPIView(generics.ListCreateAPIView):
+    queryset = BusChat.objects.all()
+    serializer_class = BusChatSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        route_id = self.kwargs.get('routeid')
+        bus_route = get_object_or_404(BusRoute, pk=route_id)
+        queryset = BusChat.objects.filter(bus_route=bus_route).order_by('created_at')
+        # To view user must be either uni staff, driver who owns this route, or student who subscribes to this route
+        return queryset
+    
+    def create(self, request, *args, **kwargs):
+        if not request.user.has_perm('bus.add_buschat'):
+            raise PermissionDenied("You do not have permission to create a bus stop.")
+        route_id = kwargs.get('routeid')
+        bus_route = get_object_or_404(BusRoute, pk=route_id)
+        request.data['bus_route'] = bus_route.id
+        request.data['sender'] = request.user.id
+        return super().create(request, *args, **kwargs)
