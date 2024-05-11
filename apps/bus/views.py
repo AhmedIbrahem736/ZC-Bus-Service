@@ -93,7 +93,7 @@ class BusChatListCreateAPIView(generics.ListCreateAPIView):
     def get_queryset(self):
         route_id = self.kwargs.get('routeid')
         bus_route = get_object_or_404(BusRoute, pk=route_id)
-        queryset = BusChat.objects.filter(bus_route=bus_route)
+        queryset = BusChat.objects.filter(bus_route=bus_route).order_by('created_at')
         # To view user must be either uni staff, driver who owns this route, or student who subscribes to this route
         return queryset
     

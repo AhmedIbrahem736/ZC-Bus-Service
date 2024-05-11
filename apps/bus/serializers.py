@@ -68,7 +68,7 @@ class BusChatSerializer(serializers.ModelSerializer):
     sender_info = UserSerializer(source='sender', read_only=True)
     class Meta:
         model = BusChat
-        fields = ['id', 'message', 'bus_route', 'sender_info']
+        fields = ['id','created_at', 'message', 'bus_route', 'sender_info']
         
     def validate_message(self, value):
         if not value:
