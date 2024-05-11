@@ -94,6 +94,7 @@ class BusChatListCreateAPIView(generics.ListCreateAPIView):
         route_id = self.kwargs.get('routeid')
         bus_route = get_object_or_404(BusRoute, pk=route_id)
         queryset = BusChat.objects.filter(bus_route=bus_route)
+        # To view user must be either uni staff, driver who owns this route, or student who subscribes to this route
         return queryset
     
     def create(self, request, *args, **kwargs):
