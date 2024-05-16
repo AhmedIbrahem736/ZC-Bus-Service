@@ -19,7 +19,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('user/', include('apps.users.urls')),
     path('bus/', include('apps.bus.urls')),
-
+    path('subscription/', include('apps.subscription.urls')),
+    path('semester/', include('apps.semester.urls')),
     # Swagger URLs
     path('api/docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
