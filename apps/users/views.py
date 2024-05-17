@@ -39,6 +39,7 @@ class SendOtpAPI(CreateAPIView):
         user.otp = '1234'
         user.otp_sent_at = timezone.now()
         user.password_status = PasswordStatus.OTP_REQUIRED
+        user.is_verified = False
         user.save()
 
         # send OTP to user via email
