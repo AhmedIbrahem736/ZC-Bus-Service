@@ -20,6 +20,7 @@ class User(AbstractUser, CustomBaseModel):
     otp_sent_at = models.DateTimeField(null=True)
     password_status = models.CharField(max_length=50, choices=PasswordStatus.choices,
                                        default=PasswordStatus.UNCHANGEABLE)
+    is_verified = models.BooleanField(default=False)
 
     objects = CustomUserManger()
     USERNAME_FIELD = "email"

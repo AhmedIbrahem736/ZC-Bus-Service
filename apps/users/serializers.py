@@ -61,6 +61,9 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
 
+        if not self.user.is_verified:
+            raise serializers.ValidationError("User is not verified.")
+
         data['user'] = ReadUserSerializer(instance=self.user).data
 
         return data
@@ -92,6 +95,7 @@ class VerifyOtpSerializer(serializers.Serializer):
         instance.otp = None
         instance.otp_sent_at = None
         instance.password_status = PasswordStatus.CHANGEABLE
+        instance.is_verified = True
         instance.save()
 
         return instance
