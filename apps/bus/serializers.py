@@ -69,6 +69,16 @@ class BusSubscriptionSerializer(serializers.ModelSerializer):
         exclude = ['is_safe_deleted']
         read_only_fields = ['start_date', 'end_date', 'amount_paid']
 
+    def validate(self, attrs):
+        user = attrs['user']
+        date_now = datetime.date.today()
+        if BusSubscription.objects.filter(user=user, is_safe_deleted=False,
+                                          bus_route__bus_offering__start_date__lte=date_now,
+                                          bus_route__bus_offering__end_date__gte=date_now).exists():
+            raise serializers.ValidationError('You cannot subscribe to multiple subscriptions per same offering')
+
+        return attrs
+
     def create(self, validated_data):
         validated_data['start_date'] = validated_data['bus_route'].bus_offering.start_date
         validated_data['end_date'] = validated_data['bus_route'].bus_offering.end_date
