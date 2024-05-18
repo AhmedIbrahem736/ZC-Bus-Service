@@ -10,11 +10,17 @@ class SemesterChoices(models.TextChoices):
     SUMMER = 'Summer'
 
 
+class BusReservationDestinationChoices(models.TextChoices):
+    FROM_UNIVERSITY = 'From University'
+    TO_UNIVERSITY = 'To University'
+
+
 class BusOffering(CustomBaseModel):
     semester = models.CharField(max_length=20, choices=SemesterChoices.choices, null=False)
     start_date = models.DateField(null=False)
     end_date = models.DateField(null=False)
     subscription_amount = models.DecimalField(max_digits=10, decimal_places=3, null=False)
+    reservation_amount = models.DecimalField(max_digits=10, decimal_places=3, null=False)
 
 
 class BusRoute(CustomBaseModel):
@@ -23,7 +29,6 @@ class BusRoute(CustomBaseModel):
     driver = models.OneToOneField(User, on_delete=models.PROTECT, related_name='bus_route')
     capacity = models.IntegerField(default=0)
     plate_number = models.CharField(max_length=20, unique=True)
-    bus_offering = models.ForeignKey(BusOffering, on_delete=models.PROTECT, related_name='bus_routes')
 
     def __str__(self):
         return self.destination
@@ -42,8 +47,16 @@ class BusStop(CustomBaseModel):
 
 
 class BusSubscription(CustomBaseModel):
-    start_date = models.DateField(null=False)
-    end_date = models.DateField(null=False)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=3, null=False)
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bus_subscriptions')
     bus_route = models.ForeignKey(BusRoute, on_delete=models.PROTECT, related_name='bus_subscriptions')
+    bus_offering = models.ForeignKey(BusOffering, on_delete=models.PROTECT, related_name='bus_subscriptions')
+
+
+class BusReservation(CustomBaseModel):
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=3, null=False)
+    date = models.DateField(null=False)
+    destination = models.CharField(max_length=20, choices=BusReservationDestinationChoices.choices, null=False)
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='bus_reservations')
+    bus_route = models.ForeignKey(BusRoute, on_delete=models.PROTECT, related_name='bus_reservation')
+    bus_offering = models.ForeignKey(BusOffering, on_delete=models.PROTECT, related_name='bus_reservation')
