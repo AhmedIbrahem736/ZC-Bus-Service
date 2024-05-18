@@ -1,54 +1,53 @@
 name: Django CI
 
 on:
-  push:
-    branches:
-      - "staging"
-  pull_request:
-    branches:
-      - "staging"
+    push:
+        branches:
+            - 'staging'
+    pull_request:
+        branches:
+            - 'staging'
 
 jobs:
-  build:
+    build:
+        runs-on: ubuntu-latest
+        strategy:
+            max-parallel: 4
+            matrix:
+                python-version: ['3.10']
 
-    runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.10]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v3
+              with:
+                  python-version: ${{ matrix.python-version }}
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
+            - name: Activate virtual environment and install dependencies
+              run: |
+                  source ~/zcbus/bin/activate
+                  python -m pip install --upgrade pip
+                  pip install -r requirements.txt
 
-    - name: Activate virtual environment and install dependencies
-      run: |
-        source ~/zcbus/bin/activate
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+            - name: Apply Migrations
+              run: |
+                  source ~/zcbus/bin/activate
+                  python manage.py migrate
 
-    - name: Apply Migrations
-      run: |
-        source ~/zcbus/bin/activate
-        python manage.py migrate
+            - name: Collect Static Files
+              run: |
+                  source ~/zcbus/bin/activate
+                  python manage.py collectstatic --noinput
 
-    - name: Collect Static Files
-      run: |
-        source ~/zcbus/bin/activate
-        python manage.py collectstatic --noinput
+            - name: Run Tests
+              run: |
+                  source ~/zcbus/bin/activate
+                  python manage.py test
 
-    - name: Run Tests
-      run: |
-        source ~/zcbus/bin/activate
-        python manage.py test
-
-    - name: Restart Gunicorn Service
-      if: github.ref == 'refs/heads/staging' || github.event.pull_request.merged == true
-      run: |
-        source ~/zcbus/bin/activate
-        sudo service gunicorn restart
+            - name: Restart Gunicorn Service
+              if: github.ref == 'refs/heads/staging' || github.event.pull_request.merged == true
+              run: |
+                  source ~/zcbus/bin/activate
+                  sudo service gunicorn restart
