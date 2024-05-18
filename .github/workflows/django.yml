@@ -3,10 +3,10 @@ name: Django CI
 on:
   push:
     branches:
-      - "staging"
+      - staging
   pull_request:
     branches:
-      - "staging"
+      - staging
 
 jobs:
   build:
