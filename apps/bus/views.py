@@ -1,12 +1,13 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
-from .models import BusRoute, BusStop
-from .serializers import BusRouteSerializer, BusStopSerializer
+from .models import BusRoute, BusStop, BusSubscription
+from .serializers import BusRouteSerializer, BusStopSerializer, BusSubscriptionSerializer
+
 
 class BusRouteListCreateAPIView(generics.ListCreateAPIView):
     queryset = BusRoute.objects.all()
     serializer_class = BusRouteSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = []
     
     def create(self, request, *args, **kwargs):
         if not request.user.has_perm('bus.add_busroute'):
@@ -27,7 +28,6 @@ class BusRouteRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         return super().update(request, *args, **kwargs)
     
 
-
 class BusRouteDeleteAPIView(generics.DestroyAPIView):
     queryset = BusRoute.objects.all()
     serializer_class = BusRouteSerializer
@@ -38,8 +38,6 @@ class BusRouteDeleteAPIView(generics.DestroyAPIView):
             raise PermissionDenied("You do not have permission to delete this bus route.")
         return super().delete(request, *args, **kwargs)
     
-
-
 
 ################################################################
 ################################ Bus Stop #####################
@@ -68,7 +66,6 @@ class BusStopRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         return super().update(request, *args, **kwargs)
     
 
-
 class BusStopDeleteAPIView(generics.DestroyAPIView):
     queryset = BusStop.objects.all()
     serializer_class = BusStopSerializer
@@ -78,3 +75,14 @@ class BusStopDeleteAPIView(generics.DestroyAPIView):
         if not request.user.has_perm('bus.delete_busstop'):
             raise PermissionDenied("You do not have permission to delete this bus route.")
         return super().delete(request, *args, **kwargs)
+
+
+class BusSubscriptionAPIView(generics.ListCreateAPIView):
+    queryset = BusSubscription.objects.filter(is_safe_deleted=False)
+    serializer_class = BusSubscriptionSerializer
+
+    def get_queryset(self):
+        if not self.request.user.has_perm('bus.view_bussubscription'):
+            return self.queryset.filter(user=self.request.user)
+
+        return self.queryset
