@@ -10,3 +10,4 @@ Zewail City Bus Service Application.
 ## SCRUM setup
 - 2-week sprints.
 - SCRUM management through JIRA software.
+- Wohoo!
