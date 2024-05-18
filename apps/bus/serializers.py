@@ -1,6 +1,8 @@
 from rest_framework import serializers
-from .models import BusRoute, BusStop
+from apps.bus.models import BusRoute, BusStop, BusSubscription, BusOffering
 import re
+import datetime
+
 
 class BusStopSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,8 +18,10 @@ class BusStopSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Invalid map location format. Must be in the format 'latitude, longitude'.")
         return value
 
+
 class BusRouteSerializer(serializers.ModelSerializer):
     bus_stops = BusStopSerializer(many=True, read_only=True)
+
     class Meta:
         model = BusRoute
         fields = ['id', 'destination', 'code', 'driver', 'capacity', 'plate_number', 'bus_stops']
@@ -48,3 +52,26 @@ class BusRouteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Plate number must contain only Arabic characters, numbers, or spaces.")
         return value
 
+    def create(self, validated_data):
+        date_now = datetime.date.today()
+        try:
+            validated_data['bus_offering'] = BusOffering.objects.get(is_safe_deleted=False,
+                                                                     start_date__lte=date_now, end_date__gte=date_now)
+        except:
+            raise serializers.ValidationError('There is no bus offering at the moment')
+
+        return super().create(validated_data)
+
+
+class BusSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BusSubscription
+        exclude = ['is_safe_deleted']
+        read_only_fields = ['start_date', 'end_date', 'amount_paid']
+
+    def create(self, validated_data):
+        validated_data['start_date'] = validated_data['bus_route'].bus_offering.start_date
+        validated_data['end_date'] = validated_data['bus_route'].bus_offering.end_date
+        validated_data['amount_paid'] = validated_data['bus_route'].bus_offering.subscription_amount
+
+        return super().create(validated_data)
