@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions
 from rest_framework.exceptions import PermissionDenied
-from .models import BusRoute, BusStop, BusSubscription
-from .serializers import BusRouteSerializer, BusStopSerializer, BusSubscriptionSerializer
+from .models import BusRoute, BusStop, BusSubscription, BusReservation
+from .serializers import BusRouteSerializer, BusStopSerializer, BusSubscriptionSerializer, BusReservationSerializer
 
 
 class BusRouteListCreateAPIView(generics.ListCreateAPIView):
@@ -86,3 +86,20 @@ class BusSubscriptionAPIView(generics.ListCreateAPIView):
             return self.queryset.filter(user=self.request.user)
 
         return self.queryset
+
+    def get_serializer_context(self):
+        return {'user': self.request.user}
+
+
+class BusReservationAPIView(generics.ListCreateAPIView):
+    queryset = BusReservation.objects.filter(is_safe_deleted=False)
+    serializer_class = BusReservationSerializer
+
+    def get_queryset(self):
+        if not self.request.user.has_perm('bus.view_busreservation'):
+            return BusReservation.objects.filter(is_safe_deleted=False, user=self.request.user)
+
+        return BusReservation.objects.filter(is_safe_deleted=False)
+
+    def get_serializer_context(self):
+        return {'user': self.request.user}
