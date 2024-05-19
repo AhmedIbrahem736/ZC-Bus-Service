@@ -14,5 +14,5 @@ urlpatterns = [
     path("update-password/", UpdatePasswordAPI.as_view()),
     path("<int:pk>/change-password/", ChangePasswordAPI.as_view()),
     path("wallet-transactions/", WalletTransactionAPI.as_view()),
-    path("profile/", UserProfileAPI.as_view()),
+    path("<int:pk>/profile/", UserProfileAPI.as_view()),
 ]

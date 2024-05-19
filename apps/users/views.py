@@ -3,7 +3,7 @@ from django.utils import timezone
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, RetrieveAPIView
 from apps.users.models import User, PasswordStatus, WalletTransaction
 from apps.users.serializers import (RegistrationSerializer, EmailSerializer, UpdatePasswordSerializer,
                                     ChangePasswordSerializer, VerifyOtpSerializer, WalletTransactionSerializer,
@@ -117,12 +117,11 @@ class WalletTransactionAPI(ListAPIView):
         return WalletTransaction.objects.filter(is_safe_deleted=False)
 
 
-class UserProfileAPI(ListAPIView):
+class UserProfileAPI(RetrieveAPIView):
     queryset = User.objects.filter(is_safe_deleted=False)
     serializer_class = ReadUserSerializer
 
     def get_queryset(self):
-        if not self.request.user.has_perm('users.view_user'):
-            return User.objects.filter(is_safe_deleted=False, id=self.request.user.id)
-
-        return User.objects.filter(is_safe_deleted=False)
+        if self.request.user.id != self.kwargs['pk']:
+            return User.objects.none()
+        return self.queryset
