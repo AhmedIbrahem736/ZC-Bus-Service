@@ -6,7 +6,8 @@ from rest_framework import status
 from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView
 from apps.users.models import User, PasswordStatus, WalletTransaction
 from apps.users.serializers import (RegistrationSerializer, EmailSerializer, UpdatePasswordSerializer,
-                                    ChangePasswordSerializer, VerifyOtpSerializer, WalletTransactionSerializer)
+                                    ChangePasswordSerializer, VerifyOtpSerializer, WalletTransactionSerializer,
+                                    ReadUserSerializer)
 
 
 class RegistrationAPI(CreateAPIView):
@@ -114,3 +115,14 @@ class WalletTransactionAPI(ListAPIView):
             return WalletTransaction.objects.filter(is_safe_deleted=False, user=self.request.user)
 
         return WalletTransaction.objects.filter(is_safe_deleted=False)
+
+
+class UserProfileAPI(ListAPIView):
+    queryset = User.objects.filter(is_safe_deleted=False)
+    serializer_class = ReadUserSerializer
+
+    def get_queryset(self):
+        if not self.request.user.has_perm('users.view_user'):
+            return User.objects.filter(is_safe_deleted=False, id=self.request.user.id)
+
+        return User.objects.filter(is_safe_deleted=False)
