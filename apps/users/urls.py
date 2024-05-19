@@ -1,6 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from apps.users.views import RegistrationAPI, SendOtpAPI, UpdatePasswordAPI, ChangePasswordAPI, VerifyOtpAPI
+from apps.users.views import (RegistrationAPI, SendOtpAPI, UpdatePasswordAPI, ChangePasswordAPI,
+                              VerifyOtpAPI, WalletTransactionAPI)
 
 
 urlpatterns = [
@@ -12,4 +13,5 @@ urlpatterns = [
     path("resend-otp/", SendOtpAPI.as_view()),
     path("update-password/", UpdatePasswordAPI.as_view()),
     path("<int:pk>/change-password/", ChangePasswordAPI.as_view()),
+    path("wallet-transactions/", WalletTransactionAPI.as_view()),
 ]

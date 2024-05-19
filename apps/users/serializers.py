@@ -3,7 +3,7 @@ from django.utils import timezone
 from datetime import timedelta
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from apps.users.models import User, PasswordStatus
+from apps.users.models import User, PasswordStatus, WalletTransaction
 
 
 class ReadUserSerializer(serializers.ModelSerializer):
@@ -153,3 +153,9 @@ class ChangePasswordSerializer(serializers.Serializer):
         instance.set_password(new_password)
         instance.save()
         return instance
+
+
+class WalletTransactionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WalletTransaction
+        exclude = ['is_safe_deleted']
