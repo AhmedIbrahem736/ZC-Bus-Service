@@ -3,10 +3,10 @@ from django.utils import timezone
 from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, UpdateAPIView
-from apps.users.models import User, PasswordStatus
+from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView
+from apps.users.models import User, PasswordStatus, WalletTransaction
 from apps.users.serializers import (RegistrationSerializer, EmailSerializer, UpdatePasswordSerializer,
-                                    ChangePasswordSerializer, VerifyOtpSerializer)
+                                    ChangePasswordSerializer, VerifyOtpSerializer, WalletTransactionSerializer)
 
 
 class RegistrationAPI(CreateAPIView):
@@ -103,3 +103,14 @@ class ChangePasswordAPI(UpdateAPIView):
 
     def put(self, request, *args, **kwargs):
         raise MethodNotAllowed(request.method)
+
+
+class WalletTransactionAPI(ListAPIView):
+    queryset = WalletTransaction.objects.filter(is_safe_deleted=False)
+    serializer_class = WalletTransactionSerializer
+
+    def get_queryset(self):
+        if not self.request.user.has_perm('users.view_wallettransaction'):
+            return WalletTransaction.objects.filter(is_safe_deleted=False, user=self.request.user)
+
+        return WalletTransaction.objects.filter(is_safe_deleted=False)

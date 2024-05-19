@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from apps.bus.models import BusRoute, BusStop, BusSubscription, BusOffering, BusReservation
+from apps.users.models import WalletTransactionType, WalletTransactionMethod
 import re
 import datetime
 
@@ -72,14 +73,19 @@ class BusSubscriptionSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['user']
         validated_data['user'] = user
-        date_now = datetime.date.today()
+
         try:
+            date_now = datetime.date.today()
             validated_data['bus_offering'] = BusOffering.objects.get(is_safe_deleted=False,
                                                                      start_date__lte=date_now, end_date__gte=date_now)
         except:
             raise serializers.ValidationError('There is no bus offering at the moment')
 
         validated_data['amount_paid'] = validated_data['bus_offering'].subscription_amount
+
+        user.subtract_from_wallet(amount=validated_data['amount_paid'],
+                                  transaction_type=WalletTransactionType.SUBSCRIPTION,
+                                  transaction_method=WalletTransactionMethod.ONLINE)
 
         return super().create(validated_data)
 
@@ -93,7 +99,7 @@ class BusReservationSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         user = self.context['user']
         destination = attrs['destination']
-        date_now = datetime.date.today()
+        date_now = attrs['date']
         if BusReservation.objects.filter(user=user, is_safe_deleted=False,
                                          date=date_now, destination=destination).exists():
             raise serializers.ValidationError('You cannot reserve multiple times on the same slot.')
@@ -103,8 +109,9 @@ class BusReservationSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['user']
         bus_route = validated_data['bus_route']
-        date_now = datetime.date.today()
+
         try:
+            date_now = datetime.date.today()
             validated_data['bus_offering'] = BusOffering.objects.get(is_safe_deleted=False,
                                                                      start_date__lte=date_now, end_date__gte=date_now)
         except:
@@ -118,6 +125,10 @@ class BusReservationSerializer(serializers.ModelSerializer):
             validated_data['amount_paid'] = 0
         else:
             validated_data['amount_paid'] = validated_data['bus_offering'].reservation_amount
+
+        user.subtract_from_wallet(amount=validated_data['amount_paid'],
+                                  transaction_type=WalletTransactionType.RESERVATION,
+                                  transaction_method=WalletTransactionMethod.ONLINE)
 
         validated_data['user'] = user
 
